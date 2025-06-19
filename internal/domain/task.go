@@ -16,6 +16,12 @@ type ValidateTask struct {
 	Done  bool
 }
 
+type UserTask struct {
+	ID       uint   `gorm:"primaryKey"`
+	Email    string `gorm:"uniqueIndex"`
+	Password string
+}
+
 func (t *Task) Validate() error {
 	if len(t.Title) == 0 {
 		return fmt.Errorf("title is required")

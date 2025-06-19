@@ -82,3 +82,11 @@ func (r *TaskPostgresRepo) Update(t *domain.Task) error {
 func (r *TaskPostgresRepo) DeleteAll() error {
 	return r.DB.Unscoped().Delete(&TaskModel{}).Error
 }
+
+func (r *TaskPostgresRepo) Login(username, password string) (string, error) {
+	var user domain.UserTask
+	if err := r.DB.Where("email = ? AND password = ?", username, password).First(&user).Error; err != nil {
+		return "", err
+	}
+	return "token", nil
+}

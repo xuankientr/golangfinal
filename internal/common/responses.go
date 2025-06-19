@@ -13,10 +13,15 @@ type PaginationResponse struct {
 	Offset int   `json:"offset"`
 }
 
-func ResponseCreated(c *fiber.Ctx, data any) error {
+func ResponseCreate(c *fiber.Ctx, data any) error {
 	return c.Status(fiber.StatusCreated).JSON(data)
 }
 
+func RespondCreated(c *fiber.Ctx, id uint) error {
+	return c.Status(http.StatusCreated).JSON(fiber.Map{
+		"id": id,
+	})
+}
 func ResponseSuccess(c *fiber.Ctx, data any) error {
 	if data == nil {
 		return c.Status(fiber.StatusNoContent).JSON(data)
@@ -25,5 +30,16 @@ func ResponseSuccess(c *fiber.Ctx, data any) error {
 }
 
 func ResponseContent(c *fiber.Ctx) error {
+	return c.SendStatus(http.StatusNoContent)
+}
+
+func RespondError(c *fiber.Ctx, code int, msg string) error {
+	return c.Status(code).JSON(fiber.Map{
+		"error":   http.StatusText(code),
+		"message": msg,
+	})
+}
+
+func ResponseNoContent(c *fiber.Ctx) error {
 	return c.SendStatus(http.StatusNoContent)
 }

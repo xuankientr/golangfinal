@@ -16,7 +16,7 @@ type TaskHandler struct {
 func NewTaskHandler(app *fiber.App, uc *usecase.TaskUsecase) {
 	handler := &TaskHandler{Usecase: uc}
 
-	app.Post("/tasks", handler.Create)
+	app.Post("/tasks", common.AuthMiddleware, handler.Create)
 	app.Get("/tasks", handler.GetAll)
 	app.Get("/tasks/:id", handler.GetByID)
 	app.Put("/tasks/:id", handler.Update)
@@ -37,7 +37,7 @@ func (h *TaskHandler) Create(c *fiber.Ctx) error {
 	if err := h.Usecase.CreateTask(&task); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
-	return common.ResponseCreated(c, task)
+	return common.ResponseCreate(c, task)
 }
 
 func (h *TaskHandler) GetAll(c *fiber.Ctx) error {

@@ -133,10 +133,13 @@ func main() {
 	app.Use(common.Logger)
 
 	db := database.InitDB()
+	userRepo := postgres.NewUserPostgresRepo(db)
+	userUC := usecase.NewUserUsecase(userRepo)
+	httpapp.NewUserHandler(app, userUC)
 
-	taskRepo := postgres.NewTaskPostgresRepo(db)
-	taskUC := usecase.NewTaskUsecase(taskRepo)
-	httpapp.NewTaskHandler(app, taskUC)
+	// taskRepo := postgres.NewTaskPostgresRepo(db)
+	// taskUC := usecase.NewTaskUsecase(taskRepo)
+	// httpapp.NewTaskHandler(app, taskUC)
 
 	app.Listen(":3000")
 }
