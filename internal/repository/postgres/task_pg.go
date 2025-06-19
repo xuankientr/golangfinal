@@ -37,16 +37,30 @@ func (r *TaskPostgresRepo) Create(t *domain.Task) error {
 	return nil
 }
 
-func (r *TaskPostgresRepo) GetAll() ([]domain.Task, error) {
+func (r *TaskPostgresRepo) GetAll(limit, offset int, filter domain.Task) ([]domain.Task, int64, error) {
 	var models []TaskModel
-	if err := r.DB.Find(&models).Error; err != nil {
-		return nil, err
+	query := r.DB.Model(&TaskModel{})
+
+	if filter.Title != "" {
+		query = query.Where("title LIKE ?", "%"+filter.Title+"%")
 	}
-	var tasks []domain.Task
+	if filter.Done {
+		query = query.Where("done = ?", true)
+	} else if !filter.Done {
+		query = query.Where("done = ?", false)
+	}
+
+	var total int64
+	query.Model(&TaskModel{}).Count(&total)
+	if err := query.Offset(offset).Limit(limit).Find(&models).Error; err != nil {
+		return nil, 0, err
+	}
+
+	tasks := []domain.Task{}
 	for _, m := range models {
 		tasks = append(tasks, *toEntity(&m))
 	}
-	return tasks, nil
+	return tasks, total, nil
 }
 
 func (r *TaskPostgresRepo) GetByID(id uint) (*domain.Task, error) {
@@ -61,6 +75,10 @@ func (r *TaskPostgresRepo) Update(t *domain.Task) error {
 	return r.DB.Save(toModel(t)).Error
 }
 
-func (r *TaskPostgresRepo) Delete(id uint) error {
-	return r.DB.Delete(&TaskModel{}, id).Error
+// func (r *TaskPostgresRepo) Delete(id uint) error {
+// 	return r.DB.Delete(&TaskModel{}, id).Error
+// }
+
+func (r *TaskPostgresRepo) DeleteAll() error {
+	return r.DB.Unscoped().Delete(&TaskModel{}).Error
 }

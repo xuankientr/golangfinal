@@ -115,20 +115,28 @@ func main() {
 package main
 
 import (
-	"github.com/Hiendang123/golang-server.git/delivery/http"
+	"github.com/Hiendang123/golang-server.git/internal/common"
+	httpapp "github.com/Hiendang123/golang-server.git/internal/delivery/http"
+	"github.com/Hiendang123/golang-server.git/internal/repository/postgres"
 	"github.com/Hiendang123/golang-server.git/internal/usecase"
 	"github.com/Hiendang123/golang-server.git/pkg/database"
-	"github.com/Hiendang123/golang-server.git/repository/postgres"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: common.ErrorHandler,
+	})
+	app.Use(recover.New())
+
+	app.Use(common.Logger)
+
 	db := database.InitDB()
 
 	taskRepo := postgres.NewTaskPostgresRepo(db)
 	taskUC := usecase.NewTaskUsecase(taskRepo)
-	http.NewTaskHandler(app, taskUC)
+	httpapp.NewTaskHandler(app, taskUC)
 
 	app.Listen(":3000")
 }
