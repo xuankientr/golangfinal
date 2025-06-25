@@ -17,27 +17,31 @@ func NewTaskHandler(app *fiber.App, uc *usecase.TaskUsecase) {
 	handler := &TaskHandler{Usecase: uc}
 
 	app.Post("/tasks", common.AuthMiddleware, handler.Create)
-	app.Get("/tasks", handler.GetAll)
-	app.Get("/tasks/:id", handler.GetByID)
-	app.Put("/tasks/:id", handler.Update)
+	app.Get("/tasks", common.AuthMiddleware, handler.GetAll)
+	app.Get("/tasks/:id", common.AuthMiddleware, handler.GetByID)
+	app.Put("/tasks/:id", common.AuthMiddleware, handler.Update)
 	// app.Delete("/tasks/:id", handler.Delete)
-	app.Delete("/tasks/all", handler.DeleteAll)
+	app.Delete("/tasks/all", common.AuthMiddleware, handler.DeleteAll)
 }
 
 func (h *TaskHandler) Create(c *fiber.Ctx) error {
-	// return fiber.NewError(fiber.StatusBadRequest, "Not implemented")
-
 	var task domain.Task
 	if err := c.BodyParser(&task); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return common.RespondError(c, fiber.StatusBadRequest, "Invalid JSON")
 	}
+
 	if err := task.Validate(); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return fiber.NewError(fiber.StatusUnprocessableEntity, err.Error())
 	}
+
+	userID := c.Locals("user_id").(uint)
+	task.CreatedBy = userID
+	task.UpdatedBy = userID
 	if err := h.Usecase.CreateTask(&task); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create task")
 	}
-	return common.ResponseCreate(c, task)
+
+	return common.ResponseCreate(c, task.ID)
 }
 
 func (h *TaskHandler) GetAll(c *fiber.Ctx) error {

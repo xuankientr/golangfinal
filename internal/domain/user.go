@@ -19,3 +19,13 @@ func (u *User) Validate() error {
 
 	return nil
 }
+
+func (u *User) ValidateLogin() error {
+	if len(u.Email) == 0 {
+		return fmt.Errorf("email is required")
+	}
+	if len(u.Password) == 0 {
+		return fmt.Errorf("password is required")
+	}
+	return nil
+}

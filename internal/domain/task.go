@@ -6,9 +6,13 @@ import (
 
 // Task model
 type Task struct {
-	ID    uint   `json:"id"`
-	Title string `json:"title"`
-	Done  bool   `json:"done"`
+	ID        uint   `json:"id"`
+	Title     string `json:"title"`
+	Done      bool   `json:"done"`
+	CreatedAt string `json:"created_at"`
+	CreatedBy uint   `json:"created_by"`
+	UpdatedAt string `json:"updated_at"`
+	UpdatedBy uint   `json:"updated_by"`
 }
 
 type ValidateTask struct {
