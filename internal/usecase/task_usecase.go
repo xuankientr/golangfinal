@@ -1,6 +1,14 @@
 package usecase
 
-import "github.com/Hiendang123/golang-server.git/internal/domain"
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+
+	"github.com/Hiendang123/golang-server.git/internal/domain"
+	"github.com/Hiendang123/golang-server.git/pkg/cache"
+)
 
 type TaskUsecase struct {
 	Repo domain.TaskRepository
@@ -19,7 +27,26 @@ func (uc *TaskUsecase) GetAll(limit, offset int, filter domain.Task) ([]domain.T
 }
 
 func (uc *TaskUsecase) GetTaskByID(id uint) (*domain.Task, error) {
-	return uc.Repo.GetByID(id)
+	ctx := context.Background()
+	cacheKey := fmt.Sprintf("task:%d", id)
+
+	//Check Redis cache
+	cachedTask, err := cache.RedisClient.Get(ctx, cacheKey).Result()
+	if err == nil {
+		var task domain.Task
+		if err = json.Unmarshal([]byte(cachedTask), &task); err == nil {
+			return &task, nil
+		}
+	}
+
+	//Fetch from database
+	task, err := uc.Repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	taskJSON, _ := json.Marshal(task)
+	cache.RedisClient.Set(ctx, cacheKey, taskJSON, 10*time.Minute)
+	return task, nil
 }
 
 func (uc *TaskUsecase) UpdateTask(t *domain.Task) error {

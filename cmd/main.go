@@ -119,6 +119,7 @@ import (
 	httpapp "github.com/Hiendang123/golang-server.git/internal/delivery/http"
 	"github.com/Hiendang123/golang-server.git/internal/repository/postgres"
 	"github.com/Hiendang123/golang-server.git/internal/usecase"
+	"github.com/Hiendang123/golang-server.git/pkg/cache"
 	"github.com/Hiendang123/golang-server.git/pkg/database"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -133,6 +134,7 @@ func main() {
 	app.Use(common.Logger)
 
 	db := database.InitDB()
+	cache.InitRedis()
 	userRepo := postgres.NewUserPostgresRepo(db)
 	userUC := usecase.NewUserUsecase(userRepo)
 	httpapp.NewUserHandler(app, userUC)

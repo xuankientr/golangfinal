@@ -1,0 +1,32 @@
+run:
+  tests: true
+
+linters:
+  enable:
+    - revive
+
+exclude-rules:
+  - path: third_party$
+    linters:
+      - revive
+  - path: builtin$
+    linters:
+      - revive
+  - path: examples$
+    linters:
+      - revive
+
+revive:
+  exclude-generated: true
+  severity: warning
+  config: ""
+  ignore-generated-header: true
+  ignore-tests: false
+  ignore-files:
+    - third_party$
+    - builtin$
+    - examples$
+  # revive không hỗ trợ trực tiếp `presets`, nhưng có thể cấu hình bằng `revive.toml`
+
+# Ghi chú: formatters không có cấu hình riêng biệt trong v1 YAML,
+# vì vậy định dạng output thường dùng qua CLI flags (như `--out-format`).
