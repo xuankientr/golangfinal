@@ -24,6 +24,20 @@ func NewTaskHandler(app *fiber.App, uc *usecase.TaskUsecase) {
 	app.Delete("/tasks/all", common.AuthMiddleware, handler.DeleteAll)
 }
 
+// Create godoc
+// @Summary Create a new task
+// @Description Create a new task for the authenticated user
+// @Tags tasks
+// @Accept json
+// @Produce json
+// @Param task body domain.Task true "Task object"
+// @Success 201 {object} map[string]interface{} "Created task ID"
+// @Failure 400 {object} map[string]interface{} "Bad Request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 422 {object} map[string]interface{} "Validation Error"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Security BearerAuth
+// @Router /tasks [post]
 func (h *TaskHandler) Create(c *fiber.Ctx) error {
 	var task domain.Task
 	if err := c.BodyParser(&task); err != nil {

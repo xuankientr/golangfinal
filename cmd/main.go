@@ -117,15 +117,28 @@ package main
 import (
 	"github.com/Hiendang123/golang-server.git/internal/common"
 	httpapp "github.com/Hiendang123/golang-server.git/internal/delivery/http"
-	"github.com/Hiendang123/golang-server.git/internal/repository/postgres"
+	"github.com/Hiendang123/golang-server.git/internal/repository/mysql"
 	"github.com/Hiendang123/golang-server.git/internal/usecase"
 	"github.com/Hiendang123/golang-server.git/pkg/cache"
 	"github.com/Hiendang123/golang-server.git/pkg/database"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"log"
+
+	_ "github.com/Hiendang123/golang-server.git/docs" // Import generated docs
+	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
+// @title My Tasks API
+// @version 1.0
+// @description A task management API with authentication
+// @host localhost:3000
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
+
 	app := fiber.New(fiber.Config{
 		ErrorHandler: common.ErrorHandler,
 	})
@@ -133,15 +146,22 @@ func main() {
 
 	app.Use(common.Logger)
 
+	// Swagger route
+
 	db := database.InitDB()
 	cache.InitRedis()
-	userRepo := postgres.NewUserPostgresRepo(db)
+
+	userRepo := mysql.NewUserMySQLRepo(db)
 	userUC := usecase.NewUserUsecase(userRepo)
 	httpapp.NewUserHandler(app, userUC)
 
-	taskRepo := postgres.NewTaskPostgresRepo(db)
+	taskRepo := mysql.NewTaskMySQLRepo(db)
 	taskUC := usecase.NewTaskUsecase(taskRepo)
 	httpapp.NewTaskHandler(app, taskUC)
+	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
-	app.Listen(":3000")
+	if err := app.Listen(":3000"); err != nil {
+		log.Fatal("failed to start server:", err)
+	}
+
 }

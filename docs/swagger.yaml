@@ -1,0 +1,77 @@
+basePath: /
+definitions:
+  domain.Task:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      done:
+        type: boolean
+      id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      updated_by:
+        type: integer
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: A task management API with authentication
+  title: My Tasks API
+  version: "1.0"
+paths:
+  /tasks:
+    post:
+      consumes:
+      - application/json
+      description: Create a new task for the authenticated user
+      parameters:
+      - description: Task object
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/domain.Task'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created task ID
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "422":
+          description: Validation Error
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new task
+      tags:
+      - tasks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

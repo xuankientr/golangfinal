@@ -21,7 +21,7 @@ func NewUserHandler(app *fiber.App, uc *usecase.UserUsecase) {
 	app.Post("/v1/users/login", limiter.New(limiter.Config{
 		Max:        3,
 		Expiration: 1 * time.Minute,
-		LimitReached: func(c *fiber.Ctx) error {
+		LimitReached: func(_ *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusTooManyRequests, "You sent too many requests. Try again later!")
 		},
 	}), handler.Login)

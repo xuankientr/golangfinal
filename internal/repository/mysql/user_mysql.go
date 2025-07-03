@@ -1,14 +1,18 @@
-package postgres
+package mysql
 
 import (
-	"github.com/Hiendang123/golang-server.git/internal/domain"
+	"github.com/Hiendang123/golang-mysql.git/internal/domain"
 	"gorm.io/gorm"
 )
 
 type UserModel struct {
-	ID       uint   `gorm:"primaryKey"`
-	Email    string `gorm:"uniqueIndex"`
-	Password string
+	ID       uint   `gorm:"primaryKey;autoIncrement"`
+	Email    string `gorm:"uniqueIndex;type:varchar(255);not null"`
+	Password string `gorm:"type:varchar(255);not null"`
+}
+
+func (UserModel) TableName() string {
+	return "users"
 }
 
 func toUserEntity(m *UserModel) *domain.User {
@@ -27,18 +31,18 @@ func toUserModel(e *domain.User) *UserModel {
 	}
 }
 
-type UserPostgresRepo struct {
+type UserMySQLRepo struct {
 	DB *gorm.DB
 }
 
-func NewUserPostgresRepo(db *gorm.DB) domain.UserRepository {
+func NewUserMySQLRepo(db *gorm.DB) domain.UserRepository {
 	if err := db.AutoMigrate(&UserModel{}); err != nil {
-		panic("failed to migrate UserModel: " + err.Error())
+		return nil
 	}
-	return &UserPostgresRepo{DB: db}
+	return &UserMySQLRepo{DB: db}
 }
 
-func (r *UserPostgresRepo) Create(u *domain.User) error {
+func (r *UserMySQLRepo) Create(u *domain.User) error {
 	model := toUserModel(u)
 	if err := r.DB.Create(model).Error; err != nil {
 		return err
@@ -47,7 +51,7 @@ func (r *UserPostgresRepo) Create(u *domain.User) error {
 	return nil
 }
 
-func (r *UserPostgresRepo) GetByEmail(email string) (*domain.User, error) {
+func (r *UserMySQLRepo) GetByEmail(email string) (*domain.User, error) {
 	var model UserModel
 	if err := r.DB.Where("email = ?", email).First(&model).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {

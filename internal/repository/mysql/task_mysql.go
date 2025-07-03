@@ -1,20 +1,24 @@
-package postgres
+package mysql
 
 import (
 	"time"
 
-	"github.com/Hiendang123/golang-server.git/internal/domain"
+	"github.com/Hiendang123/golang-mysql.git/internal/domain"
 	"gorm.io/gorm"
 )
 
 type TaskModel struct {
-	ID        uint `gorm:"primaryKey"`
-	Title     string
-	Done      bool
+	ID        uint      `gorm:"primaryKey;autoIncrement"`
+	Title     string    `gorm:"type:varchar(255);not null"`
+	Done      bool      `gorm:"default:false"`
 	CreatedAt time.Time `gorm:"autoCreateTime"`
-	CreatedBy uint
+	CreatedBy uint      `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
-	UpdatedBy uint
+	UpdatedBy uint      `gorm:"not null"`
+}
+
+func (TaskModel) TableName() string {
+	return "tasks"
 }
 
 func toEntity(m *TaskModel) *domain.Task {
@@ -39,18 +43,18 @@ func toModel(e *domain.Task) *TaskModel {
 	}
 }
 
-type TaskPostgresRepo struct {
+type TaskMySQLRepo struct {
 	DB *gorm.DB
 }
 
-func NewTaskPostgresRepo(db *gorm.DB) domain.TaskRepository {
+func NewTaskMySQLRepo(db *gorm.DB) domain.TaskRepository {
 	if err := db.AutoMigrate(&TaskModel{}); err != nil {
-		panic("failed to migrate TaskModel: " + err.Error())
+		return nil
 	}
-	return &TaskPostgresRepo{DB: db}
+	return &TaskMySQLRepo{DB: db}
 }
 
-func (r *TaskPostgresRepo) Create(t *domain.Task) error {
+func (r *TaskMySQLRepo) Create(t *domain.Task) error {
 	model := toModel(t)
 	if err := r.DB.Create(model).Error; err != nil {
 		return err
@@ -59,7 +63,7 @@ func (r *TaskPostgresRepo) Create(t *domain.Task) error {
 	return nil
 }
 
-func (r *TaskPostgresRepo) GetAll(limit, offset int, filters domain.Task) ([]domain.Task, int64, error) {
+func (r *TaskMySQLRepo) GetAll(limit, offset int, filters domain.Task) ([]domain.Task, int64, error) {
 	var models []TaskModel
 	query := r.DB.Model(&TaskModel{})
 
@@ -88,7 +92,7 @@ func (r *TaskPostgresRepo) GetAll(limit, offset int, filters domain.Task) ([]dom
 	return tasks, total, nil
 }
 
-func (r *TaskPostgresRepo) GetByID(id uint) (*domain.Task, error) {
+func (r *TaskMySQLRepo) GetByID(id uint) (*domain.Task, error) {
 	var m TaskModel
 	if err := r.DB.First(&m, id).Error; err != nil {
 		return nil, err
@@ -96,15 +100,15 @@ func (r *TaskPostgresRepo) GetByID(id uint) (*domain.Task, error) {
 	return toEntity(&m), nil
 }
 
-func (r *TaskPostgresRepo) Update(t *domain.Task) error {
+func (r *TaskMySQLRepo) Update(t *domain.Task) error {
 	return r.DB.Save(toModel(t)).Error
 }
 
-func (r *TaskPostgresRepo) Delete(id uint) error {
+func (r *TaskMySQLRepo) Delete(id uint) error {
 	return r.DB.Delete(&TaskModel{}, id).Error
 }
 
 // DeleteAll deletes all tasks from the database.
-func (r *TaskPostgresRepo) DeleteAll() error {
+func (r *TaskMySQLRepo) DeleteAll() error {
 	return r.DB.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&TaskModel{}).Error
 }
